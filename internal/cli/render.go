@@ -176,11 +176,15 @@ func readScene(path string, stdin io.Reader) ([]byte, error) {
 }
 func distinctPaths(scene, out, report string) error {
 	seen := map[string]bool{}
-	for _, p := range []string{scene, out, report} {
-		if p == "" || p == "-" {
+	var existing []os.FileInfo
+	for i, p := range []string{scene, out, report} {
+		if p == "" || (i == 0 && p == "-") {
 			continue
 		}
-		a, err := filepath.Abs(p)
+		if p == "-" {
+			return fmt.Errorf("only --scene accepts -; outputs must be file paths")
+		}
+		a, err := canonicalPath(p)
 		if err != nil {
 			return err
 		}
@@ -188,8 +192,45 @@ func distinctPaths(scene, out, report string) error {
 			return fmt.Errorf("scene, PNG, and report paths must be distinct")
 		}
 		seen[a] = true
+		info, err := os.Stat(a)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		if err == nil {
+			for _, other := range existing {
+				if os.SameFile(info, other) {
+					return fmt.Errorf("scene, PNG, and report paths must be distinct")
+				}
+			}
+			existing = append(existing, info)
+		}
 	}
 	return nil
+}
+
+// Resolve existing ancestors too: two not-yet-created outputs can alias through
+// a directory symlink (notably /tmp and /private/tmp on macOS).
+func canonicalPath(path string) (string, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	var suffix []string
+	for {
+		resolved, err := filepath.EvalSymlinks(path)
+		if err == nil {
+			return filepath.Join(append([]string{resolved}, suffix...)...), nil
+		}
+		if !os.IsNotExist(err) {
+			return "", err
+		}
+		parent := filepath.Dir(path)
+		if parent == path {
+			return "", err
+		}
+		suffix = append([]string{filepath.Base(path)}, suffix...)
+		path = parent
+	}
 }
 func writeAtomic(path string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {

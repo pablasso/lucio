@@ -54,6 +54,8 @@ Unknown fields, duplicate IDs/keys, null scalars, off-canvas boxes, missing
 assets, clipping, and text overflow fail validation. On failure no new PNG is
 written, and a report is written when requested. An existing output file is not
 a successful new render; always check the command's exit status and report.
+Only `--scene` accepts `-` for stdin; PNG/report outputs require distinct file
+paths. Existing symlink/directory aliases and hardlinks are checked before writing.
 
 Resource limits are additional to JSON Schema and layout validation: 1 MiB of
 JSON, 32 levels of nesting, 16384 value tokens, 4096 bytes per string/key,
