@@ -5,3 +5,11 @@
 .DS_Store
 .venv/
 __pycache__/
+*.jsonl
+*.jsonl.*
+*.log
+.env
+.env.*
+/scene.json
+/preview.png
+/report.json

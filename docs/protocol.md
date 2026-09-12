@@ -21,6 +21,9 @@ class, packet ID, inner length, reserved uint32. Classes used here are control
 Status and parameter responses receive a server control ACK acknowledging the
 screen's packet ID. A successful image ACK is screen control code 1, argument 0,
 with the image packet ID. These two directions have distinct packet-ID streams.
+The server's control ACK has a 24-byte block record followed by the 44-byte
+plain packet: record words are `0, 0, 44, 44, 1, 0`. Its plain packet uses the
+same 36-byte header and an eight-byte `(1, 0)` control body.
 
 ## Images
 
@@ -42,7 +45,8 @@ of the physical pixels or proof of visual quality.
 
 Image packets are compressed into independent raw LZ4 blocks of 4800 bytes.
 Each block has a 24-byte record header: uint32 index, last index, compressed
-length, uncompressed length, and two zero reserved fields. The resulting stream
+length, uncompressed length, and two fields set to zero for compressed images.
+The corresponding field at byte 16 is 1 for the plain server control ACK. The resulting stream
 is enclosed in the normal outer frame. This is not the standard LZ4 frame format.
 
 ## Conservative partial updates

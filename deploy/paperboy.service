@@ -1,0 +1,25 @@
+[Unit]
+Description=Optional daily front page for Lucio
+Documentation=https://github.com/pablasso/lucio
+Wants=network-online.target lucio.service
+After=network-online.target lucio.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/paperboy --lucio /usr/local/bin/lucio --out /var/cache/paperboy/today.png
+TimeoutStartSec=2h
+DynamicUser=yes
+CacheDirectory=paperboy
+CacheDirectoryMode=0700
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+UMask=0077
+MemoryMax=512M

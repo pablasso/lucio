@@ -1,0 +1,11 @@
+[Unit]
+Description=Optional daily Paperboy schedule (explicit opt-in)
+
+[Timer]
+OnCalendar=*-*-* 08:00:00 America/Chicago
+Persistent=no
+AccuracySec=1m
+Unit=paperboy.service
+
+[Install]
+WantedBy=timers.target

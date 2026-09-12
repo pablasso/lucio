@@ -1,0 +1,27 @@
+[Unit]
+Description=Lucio single-screen e-paper gateway
+Documentation=https://github.com/pablasso/lucio
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/lucio serve
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+UMask=0077
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target

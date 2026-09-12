@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '43 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+      - name: Install optional PDF dependency (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Install optional PDF dependency (macOS)
+        if: runner.os == 'macOS'
+        run: command -v pdftocairo || brew install poppler
+      - run: make test smoke
+      - name: Bounded parser fuzzing
+        if: runner.os == 'Linux'
+        run: make fuzz
+      - name: Dependency files are tidy
+        run: go mod tidy && git diff --exit-code -- go.mod go.sum
+      - name: Verify Linux service syntax (never starts services)
+        if: runner.os == 'Linux'
+        run: |
+          sudo install -m 0755 bin/lucio bin/paperboy /usr/local/bin/
+          systemd-analyze verify deploy/lucio.service deploy/paperboy.service deploy/paperboy.timer
+      - name: Native archive smoke check
+        run: |
+          sh scripts/release.sh snapshot
+          python3 scripts/check-release.py dist/*.tar.gz
+
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+      - name: Install pinned audit tools
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
+          go install github.com/zricethezav/gitleaks/v8@v8.30.1
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - run: make audit

@@ -5,9 +5,10 @@ SIL Open Font License 1.1, not MIT. The full notice and license are in
 internal/renderer/fonts/OFL.txt. Font files are included unmodified.
 Source: https://github.com/notofonts
 
-The Go standard library and golang.org/x/image and golang.org/x/text modules
-use BSD-style licenses. Dependency license texts are included in release
-archives; exact dependency versions are recorded in go.mod and go.sum.
+The Go standard library, golang.org/x/image, golang.org/x/text,
+golang.org/x/sys, and go.bug.st/serial use BSD-style licenses. See
+THIRD_PARTY_NOTICES.md and third_party/licenses/ for included texts.
+Exact dependency versions are recorded in go.mod, go.sum, and release BUILDINFO.
 
 Visionect and Joan are names of their respective owners. Lucio is an
 independent project, not affiliated with or endorsed by Visionect.

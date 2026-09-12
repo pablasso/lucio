@@ -1,0 +1,88 @@
+name: Draft release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      RELEASE_VERSION: ${{ github.ref_name }}
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+      - name: Install PDF dependency (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Install PDF dependency (macOS)
+        if: runner.os == 'macOS'
+        run: command -v pdftocairo || brew install poppler
+      - run: make test smoke
+      - name: Security gate
+        if: runner.os == 'Linux'
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
+          go install github.com/zricethezav/gitleaks/v8@v8.30.1
+          "$(go env GOPATH)/bin/govulncheck" ./...
+          "$(go env GOPATH)/bin/gitleaks" git --redact --no-banner .
+      - name: Linux archives
+        if: runner.os == 'Linux'
+        run: |
+          for arch in amd64 arm64 armv7; do
+            sh scripts/release.sh "$RELEASE_VERSION" linux "$arch"
+          done
+      - name: macOS archives (native SDK for cgo)
+        if: runner.os == 'macOS'
+        run: |
+          for arch in amd64 arm64; do
+            sh scripts/release.sh "$RELEASE_VERSION" darwin "$arch"
+          done
+      - run: python3 scripts/check-release.py dist/*.tar.gz
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-${{ runner.os }}
+          path: |
+            dist/*.tar.gz
+            dist/*.sha256
+          if-no-files-found: error
+
+  draft:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist
+      - name: Verify checksums and create an unpublished draft
+        run: |
+          cd dist
+          for file in *.sha256; do sha256sum --check "$file"; done
+          sha256sum *.tar.gz > SHA256SUMS
+          gh release create "$VERSION" --verify-tag --draft --generate-notes \
+            --title "Lucio $VERSION" ./*.tar.gz SHA256SUMS

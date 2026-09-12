@@ -75,8 +75,20 @@ optical confirmation of the displayed page.
 Preview and deliver manually before installing the optional systemd service and
 timer in [`deploy/`](../deploy/). The timer runs once daily at 08:00
 America/Chicago and does **not** make up missed runs at boot. Enable it only if
-you want daily Internet fetches and physical display updates. systemd prevents
-its own timer jobs from overlapping; do not run competing manual publishers.
+you want daily Internet fetches and physical display updates. After installing
+both binaries and Poppler, the explicit opt-in is:
+
+```sh
+sudo install -m 0644 deploy/paperboy.service deploy/paperboy.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now paperboy.timer
+systemctl list-timers paperboy.timer
+```
+
+Disable it with `sudo systemctl disable --now paperboy.timer`; stop
+`paperboy.service` too if you want to cancel a currently running job. systemd
+prevents its own timer jobs from overlapping; do not run competing manual
+publishers.
 
 A cron alternative should use a host-local lock (`flock` on Linux) so a retrying
 run cannot overlap the next invocation. Choose a cadence appropriate to the

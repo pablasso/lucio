@@ -27,7 +27,8 @@ Order is paint order. Colors are `#rrggbb`; output is an 8-bit grayscale PNG.
   horizontal stack) and a nested `node`.
 
 Use `examples/hello.json` and `examples/dashboard.json` as complete examples.
-For `examples/image.json`, supply your own `picture.png` using `--asset-root`.
+`examples/image.json` uses the bundled synthetic `picture.png`; use your own
+image by changing `src` or selecting an `--asset-root` that contains it.
 
 ## Assets
 
