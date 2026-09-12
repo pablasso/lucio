@@ -230,7 +230,7 @@ func DescribeMarkdown() string {
 	fmt.Fprintf(&b, "- Unknown fields, bad enum values, clipping, overflow, and bad assets are errors by default.\n")
 	fmt.Fprintf(&b, "- Colors are `#rrggbb` and convert to gray with `(299*R + 587*G + 114*B + 500) / 1000`.\n")
 	fmt.Fprintf(&b, "- Image assets are local PNG/JPEG files; `fit` defaults to `exact`, with `contain`, `cover`, and `stretch` available.\n")
-	fmt.Fprintf(&b, "- Use `lucio version --format json` to check renderer capabilities on the machine that will render/push.\n")
+	fmt.Fprintf(&b, "- Use `lucio version --json` to check renderer capabilities on the machine that will render/push.\n")
 	fmt.Fprintf(&b, "- Normal loop: `lucio describe` or `lucio init` -> edit `scene.json` -> `lucio render --out --report` -> revise.\n\n")
 	fmt.Fprintf(&b, "## Pipeline and reports\n\n")
 	fmt.Fprintf(&b, "- Author nodes are the scene nodes you write; the renderer resolves them, emits a flat display list of core draw ops, then renders those draw ops.\n")

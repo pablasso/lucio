@@ -1,0 +1,2 @@
+# Optional, only for the USB setup helper. Not needed to run Lucio.
+pyserial==3.5
