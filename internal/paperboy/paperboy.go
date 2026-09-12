@@ -143,7 +143,7 @@ func Run(ctx context.Context, args []string, stdout io.Writer) error {
 	logger.Printf("lucio=%s", lucioPath)
 	logger.Printf("date=%s paper=%s url=%s", paperDate.Format("2006-01-02"), paper.Code, pdfURL)
 	logger.Printf("work_dir=%s scan_pdf=%s rendered_png=%s source_png=%s scene=%s report=%s", cfg.WorkDir, scanPath, renderedPath, normalizedSourcePath, scenePath, reportPath)
-	logger.Printf("output=%s render_width=%d no_push=%t server=%s update=%s ack_timeout=%s", cfg.OutPath, cfg.RenderSize, cfg.NoPush, cfg.ServerURL, normalizedUpdatePolicy(cfg.UpdatePolicy), cfg.AckTimeout)
+	logger.Printf("output=%s render_size=%d no_push=%t server=%s update=%s ack_timeout=%s", cfg.OutPath, cfg.RenderSize, cfg.NoPush, cfg.ServerURL, normalizedUpdatePolicy(cfg.UpdatePolicy), cfg.AckTimeout)
 
 	if cfg.PDFPath != "" {
 		scanPath, err = filepath.Abs(cfg.PDFPath)

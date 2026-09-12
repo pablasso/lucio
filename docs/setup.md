@@ -13,7 +13,7 @@ rollback path before changing a screen.
 
 ## 1. Install Lucio
 
-From a checkout, with Go 1.25 or newer:
+From a checkout, with Go 1.26.8 or a newer patched release:
 
 ```sh
 go build -o bin/lucio ./cmd/lucio
