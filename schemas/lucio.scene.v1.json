@@ -1,0 +1,406 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "The renderer additionally enforces documented resource limits (JSON bytes, depth, tokens, strings, numeric magnitude, and decoded images). Layout and font overflow require rendering, not just schema validation.",
+  "$id": "https://raw.githubusercontent.com/pablasso/lucio/main/schemas/lucio.scene.v1.json",
+  "title": "Lucio scene v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "nodes"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://raw.githubusercontent.com/pablasso/lucio/main/schemas/lucio.scene.v1.json"
+    },
+    "version": {
+      "type": "string",
+      "const": "lucio.scene/v1"
+    },
+    "canvas": {
+      "$ref": "#/$defs/canvas"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/topLevelNode"
+      }
+    }
+  },
+  "$defs": {
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "integer", "const": 1440 },
+        "height": { "type": "integer", "const": 2560 },
+        "background": { "$ref": "#/$defs/color", "default": "#ffffff" }
+      }
+    },
+    "box": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0, "maximum": 1439 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 2559 },
+        "w": { "type": "integer", "minimum": 1, "maximum": 1440 },
+        "h": { "type": "integer", "minimum": 1, "maximum": 2560 }
+      },
+      "description": "The renderer also requires x+w <= 1440 and y+h <= 2560."
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 }
+      },
+      "description": "Line points are relative to box origin and must be inside the box after layout."
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "font": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["size"],
+      "properties": {
+        "family": { "type": "string", "enum": ["sans", "serif", "mono"], "default": "sans" },
+        "size": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "weight": { "type": "string", "enum": ["regular", "bold"], "default": "regular" }
+      }
+    },
+    "textCommon": {
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "font": { "$ref": "#/$defs/font" },
+        "align": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
+        "valign": { "type": "string", "enum": ["top", "middle", "bottom"], "default": "top" },
+        "color": { "$ref": "#/$defs/color", "default": "#000000" },
+        "wrap": { "type": "boolean", "default": false },
+        "max_lines": { "type": "integer", "minimum": 1 },
+        "shrink_to_fit": { "type": "boolean", "default": false },
+        "shrink_min_size": { "type": "integer", "minimum": 1, "default": 12 },
+        "line_height": { "type": "number", "exclusiveMinimum": 0, "default": 1.2 }
+      }
+    },
+    "nodeBaseProperties": {
+      "id": { "type": "string", "minLength": 1 },
+      "type": { "type": "string" },
+      "box": { "$ref": "#/$defs/box" }
+    },
+    "topLevelNode": {
+      "allOf": [
+        { "$ref": "#/$defs/anyNode" },
+        { "required": ["box"] }
+      ]
+    },
+    "assignedBoxNode": {
+      "allOf": [
+        { "$ref": "#/$defs/anyNode" },
+        { "not": { "required": ["box"] }, "description": "Child nodes in layout containers must omit box; the parent assigns it." }
+      ]
+    },
+    "anyNode": {
+      "oneOf": [
+        { "$ref": "#/$defs/textNode" },
+        { "$ref": "#/$defs/rectNode" },
+        { "$ref": "#/$defs/lineNode" },
+        { "$ref": "#/$defs/imageNode" },
+        { "$ref": "#/$defs/ruleNode" },
+        { "$ref": "#/$defs/cardNode" },
+        { "$ref": "#/$defs/gridNode" },
+        { "$ref": "#/$defs/listNode" },
+        { "$ref": "#/$defs/stackNode" },
+        { "$ref": "#/$defs/sectionNode" }
+      ]
+    },
+    "textNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "text", "font"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "text" },
+        "box": { "$ref": "#/$defs/box" },
+        "text": { "type": "string" },
+        "font": { "$ref": "#/$defs/font" },
+        "align": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
+        "valign": { "type": "string", "enum": ["top", "middle", "bottom"], "default": "top" },
+        "color": { "$ref": "#/$defs/color", "default": "#000000" },
+        "wrap": { "type": "boolean", "default": false },
+        "max_lines": { "type": "integer", "minimum": 1 },
+        "shrink_to_fit": { "type": "boolean", "default": false },
+        "shrink_min_size": { "type": "integer", "minimum": 1, "default": 12 },
+        "line_height": { "type": "number", "exclusiveMinimum": 0, "default": 1.2 }
+      }
+    },
+    "rectNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "rect" },
+        "box": { "$ref": "#/$defs/box" },
+        "fill": { "$ref": "#/$defs/color" },
+        "stroke": { "$ref": "#/$defs/color" },
+        "stroke_width": { "type": "integer", "minimum": 0 },
+        "radius": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "lineNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "from", "to"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "line" },
+        "box": { "$ref": "#/$defs/box" },
+        "from": { "$ref": "#/$defs/point" },
+        "to": { "$ref": "#/$defs/point" },
+        "stroke": { "$ref": "#/$defs/color", "default": "#000000" },
+        "stroke_width": { "type": "integer", "minimum": 1, "default": 1 }
+      }
+    },
+    "imageNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "src"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "image" },
+        "box": { "$ref": "#/$defs/box" },
+        "src": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\.([Pp][Nn][Gg]|[Jj][Pp][Ee]?[Gg])$",
+          "not": { "anyOf": [{ "pattern": "://" }, { "pattern": "^[Dd][Aa][Tt][Aa]:" }] },
+          "description": "Local PNG/JPEG path only. No URLs or data: URIs."
+        },
+        "fit": { "type": "string", "enum": ["exact", "contain", "cover", "stretch"], "default": "exact" },
+        "position": {
+          "oneOf": [
+            { "type": "string", "enum": ["center", "top", "bottom", "left", "right"] },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["x", "y"],
+              "properties": {
+                "x": { "type": "number", "minimum": 0, "maximum": 1 },
+                "y": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            }
+          ],
+          "default": "center"
+        },
+        "background": { "$ref": "#/$defs/color" }
+      }
+    },
+    "ruleNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "rule" },
+        "box": { "$ref": "#/$defs/box" },
+        "orientation": { "type": "string", "enum": ["horizontal", "vertical"], "default": "horizontal" },
+        "stroke": { "$ref": "#/$defs/color", "default": "#000000" },
+        "stroke_width": { "type": "integer", "minimum": 1, "default": 1 },
+        "inset_start": { "type": "integer", "minimum": 0, "default": 0 },
+        "inset_end": { "type": "integer", "minimum": 0, "default": 0 }
+      }
+    },
+    "cardTextFields": {
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "font": { "$ref": "#/$defs/font" },
+        "color": { "$ref": "#/$defs/color" },
+        "align": { "type": "string", "enum": ["left", "center", "right"] },
+        "valign": { "type": "string", "enum": ["top", "middle", "bottom"] },
+        "wrap": { "type": "boolean" },
+        "max_lines": { "type": "integer", "minimum": 1 },
+        "shrink_to_fit": { "type": "boolean" },
+        "shrink_min_size": { "type": "integer", "minimum": 1 },
+        "line_height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "cardHeader": {
+      "allOf": [
+        { "$ref": "#/$defs/cardTextFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "text": { "type": "string" },
+            "height": { "type": "integer", "minimum": 1, "default": 56 },
+            "fill": { "$ref": "#/$defs/color", "default": "#dddddd" },
+            "font": { "$ref": "#/$defs/font" },
+            "color": { "$ref": "#/$defs/color" },
+            "align": { "type": "string", "enum": ["left", "center", "right"] },
+            "valign": { "type": "string", "enum": ["top", "middle", "bottom"] },
+            "wrap": { "type": "boolean" },
+            "max_lines": { "type": "integer", "minimum": 1 },
+            "shrink_to_fit": { "type": "boolean" },
+            "shrink_min_size": { "type": "integer", "minimum": 1 },
+            "line_height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      ]
+    },
+    "cardBody": {
+      "allOf": [
+        { "$ref": "#/$defs/cardTextFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "text": { "type": "string" },
+            "font": { "$ref": "#/$defs/font" },
+            "color": { "$ref": "#/$defs/color" },
+            "align": { "type": "string", "enum": ["left", "center", "right"] },
+            "valign": { "type": "string", "enum": ["top", "middle", "bottom"] },
+            "wrap": { "type": "boolean" },
+            "max_lines": { "type": "integer", "minimum": 1 },
+            "shrink_to_fit": { "type": "boolean" },
+            "shrink_min_size": { "type": "integer", "minimum": 1 },
+            "line_height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      ]
+    },
+    "cardNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "card" },
+        "box": { "$ref": "#/$defs/box" },
+        "fill": { "$ref": "#/$defs/color", "default": "#f4f4f4" },
+        "stroke": { "$ref": "#/$defs/color", "default": "#111111" },
+        "stroke_width": { "type": "integer", "minimum": 0, "default": 2 },
+        "radius": { "type": "integer", "minimum": 0, "default": 16 },
+        "padding": { "type": "integer", "minimum": 0, "default": 20 },
+        "header_gap": { "type": "integer", "minimum": 0, "default": 12 },
+        "header": { "$ref": "#/$defs/cardHeader" },
+        "body": { "$ref": "#/$defs/cardBody" }
+      }
+    },
+    "gridNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "columns", "children"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "grid" },
+        "box": { "$ref": "#/$defs/box" },
+        "columns": { "type": "integer", "minimum": 1 },
+        "rows": { "type": "integer", "minimum": 1 },
+        "gap_x": { "type": "integer", "minimum": 0, "default": 24 },
+        "gap_y": { "type": "integer", "minimum": 0, "default": 24 },
+        "children": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/assignedBoxNode" }
+        }
+      },
+      "description": "Semantic validation additionally requires rows * columns >= child count and positive computed cells."
+    },
+    "listNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "items"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "list" },
+        "box": { "$ref": "#/$defs/box" },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "marker": { "type": "string", "enum": ["bullet", "dash", "number", "check", "none"], "default": "bullet" },
+        "font": { "$ref": "#/$defs/font" },
+        "color": { "$ref": "#/$defs/color", "default": "#000000" },
+        "line_height": { "type": "number", "exclusiveMinimum": 0, "default": 1.2 },
+        "shrink_to_fit": { "type": "boolean", "default": false },
+        "shrink_min_size": { "type": "integer", "minimum": 1, "default": 12 },
+        "marker_gap": { "type": "integer", "minimum": 0, "default": 12 },
+        "item_gap": { "type": "integer", "minimum": 0, "default": 8 }
+      }
+    },
+    "stackChildVertical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["height", "node"],
+      "properties": {
+        "height": { "type": "integer", "minimum": 1 },
+        "node": { "$ref": "#/$defs/assignedBoxNode" }
+      }
+    },
+    "stackChildHorizontal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "node"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "node": { "$ref": "#/$defs/assignedBoxNode" }
+      }
+    },
+    "stackNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "children"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "stack" },
+        "box": { "$ref": "#/$defs/box" },
+        "direction": { "type": "string", "enum": ["vertical", "horizontal"], "default": "vertical" },
+        "gap": { "type": "integer", "minimum": 0, "default": 24 },
+        "children": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/stackChildVertical" },
+              { "$ref": "#/$defs/stackChildHorizontal" }
+            ]
+          }
+        }
+      },
+      "description": "Go validation requires vertical stacks to use height wrappers and horizontal stacks to use width wrappers."
+    },
+    "sectionNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "title"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "section" },
+        "box": { "$ref": "#/$defs/box" },
+        "title": { "type": "string" },
+        "title_font": { "$ref": "#/$defs/font" },
+        "title_color": { "$ref": "#/$defs/color", "default": "#000000" },
+        "title_align": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
+        "title_valign": { "type": "string", "enum": ["top", "middle", "bottom"], "default": "middle" },
+        "title_height": { "type": "integer", "minimum": 1, "default": 72 },
+        "gap": { "type": "integer", "minimum": 0, "default": 24 },
+        "rule": { "type": "boolean", "default": true },
+        "rule_stroke": { "$ref": "#/$defs/color", "default": "#000000" },
+        "rule_stroke_width": { "type": "integer", "minimum": 1, "default": 2 },
+        "rule_height": { "type": "integer", "minimum": 1, "default": 4 },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stackChildVertical" }
+        }
+      }
+    }
+  }
+}

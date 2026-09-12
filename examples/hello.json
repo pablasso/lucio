@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/pablasso/lucio/main/schemas/lucio.scene.v1.json",
+  "version": "lucio.scene/v1",
+  "nodes": [
+    {"id":"title","type":"text","box":{"x":100,"y":120,"w":1240,"h":180},"text":"Hello, Lucio.","font":{"family":"serif","size":100,"weight":"bold"}},
+    {"id":"subtitle","type":"text","box":{"x":100,"y":340,"w":1180,"h":160},"text":"Your screen. Your content.\nRendered locally, from a simple JSON scene.","font":{"family":"sans","size":38},"wrap":true},
+    {"id":"rule","type":"rule","box":{"x":100,"y":550,"w":1240,"h":8},"stroke_width":4},
+    {"id":"steps","type":"list","box":{"x":100,"y":680,"w":1140,"h":440},"items":["Create a scene","Preview it offline","Push it to your display"],"marker":"number","font":{"family":"sans","size":46},"item_gap":36},
+    {"id":"swatches","type":"grid","box":{"x":100,"y":1350,"w":1240,"h":240},"columns":4,"gap_x":16,"children":[
+      {"id":"black","type":"rect","fill":"#000000"},
+      {"id":"dark","type":"rect","fill":"#555555"},
+      {"id":"light","type":"rect","fill":"#aaaaaa"},
+      {"id":"white","type":"rect","fill":"#ffffff","stroke":"#000000","stroke_width":2}
+    ]},
+    {"id":"footer","type":"text","box":{"x":100,"y":2230,"w":1240,"h":160},"text":"1440 x 2560 portrait pixels\nLEFT edge / bottom of page","font":{"family":"mono","size":30}},
+    {"id":"orientation","type":"rect","box":{"x":0,"y":2496,"w":180,"h":64},"fill":"#000000"}
+  ]
+}

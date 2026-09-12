@@ -1,0 +1,12 @@
+{
+  "version":"lucio.scene/v1",
+  "nodes":[
+    {"id":"heading","type":"section","box":{"x":80,"y":80,"w":1280,"h":600},"title":"A quiet dashboard","title_font":{"family":"serif","size":64,"weight":"bold"},"title_height":110,"gap":32,"children":[
+      {"height":280,"node":{"id":"notes","type":"list","items":["Read a book","Water the plants","Take a walk"],"marker":"check","font":{"family":"sans","size":42},"item_gap":20}}
+    ]},
+    {"id":"cards","type":"grid","box":{"x":80,"y":780,"w":1280,"h":580},"columns":2,"gap_x":40,"children":[
+      {"id":"today","type":"card","padding":28,"header":{"text":"TODAY","height":80},"body":{"text":"A place for your calendar, reminders, or a short note.","font":{"family":"sans","size":38},"wrap":true}},
+      {"id":"status","type":"card","padding":28,"header":{"text":"LOCAL FIRST","height":80},"body":{"text":"This example uses only bundled fonts. It needs no network or display to render.","font":{"family":"sans","size":38},"wrap":true}}
+    ]}
+  ]
+}
