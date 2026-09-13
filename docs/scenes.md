@@ -47,8 +47,10 @@ levels, so the PNG is a layout preview, not an exact optical simulation.
 
 `lucio render --scene scene.json --out preview.png --report report.json` writes
 an image and a report. The report lists source paths, layout issues, final
-geometry, and the PNG SHA256. Add `--report-detail` for the flat drawing
-operations and their source mapping.
+geometry, and the PNG SHA256. That hash identifies the actual PNG bytes, not a
+cross-platform scene identity: CPU-dependent font-rasterization rounding can
+slightly change antialiasing and therefore the hash. Add `--report-detail` for
+the flat drawing operations and their source mapping.
 
 Unknown fields, duplicate IDs/keys, null scalars, off-canvas boxes, missing
 assets, clipping, and text overflow fail validation. On failure no new PNG is

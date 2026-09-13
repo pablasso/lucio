@@ -48,9 +48,20 @@ func TestDashboardTemplateGoldenHash(t *testing.T) {
 	if !result.Report.OK {
 		t.Fatalf("dashboard failed to render: %+v", result.Report.Issues)
 	}
-	const wantSHA256 = "a7c6e2cbebae8deda8a70d48bdd45acff09c530edc27a81727e68aa21d6ab60c"
-	if result.Report.Output.SHA256 != wantSHA256 {
-		t.Fatalf("dashboard sha256 = %s, want %s", result.Report.Output.SHA256, wantSHA256)
+	// x/image/vector's font rasterization differs with fused multiply-add
+	// (FMA): arm64 uses it, baseline amd64 does not. Disabling FMA in vector
+	// on arm64 reproduces the amd64 PNG exactly. The reviewed outputs differ
+	// at 52 antialiased pixels by just 1/255; all 16-level display pixels and
+	// layout metrics are identical. Keep exact baselines, not a platform skip
+	// or a broad pixel tolerance. New hashes still require visual review.
+	const (
+		wantFMA   = "a7c6e2cbebae8deda8a70d48bdd45acff09c530edc27a81727e68aa21d6ab60c"
+		wantNoFMA = "312fdd61bfedbbc780eef9877c8e3af956ed498bb5fbf4183137519d67616f24"
+	)
+	switch got := result.Report.Output.SHA256; got {
+	case wantFMA, wantNoFMA:
+	default:
+		t.Fatalf("dashboard sha256 = %s, want reviewed FMA %s or non-FMA %s", got, wantFMA, wantNoFMA)
 	}
 }
 
